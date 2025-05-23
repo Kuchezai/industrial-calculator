@@ -1,0 +1,124 @@
+openapi: 3.0.0
+info:
+  title: Instruction Processor API
+  description: API для обработки списка инструкций с арифметическими операциями и выводом результатов
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /process:
+    post:
+      summary: Обработка списка инструкций
+      description: |
+        Принимает список инструкций двух типов:
+        - calc - вычисление арифметической операции и сохранение результата в переменную
+        - print - вывод значения переменной
+        
+        Переменные могут быть использованы только после их вычисления.
+        В одну переменную можно записать значение только один раз.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/CalcInstruction'
+                  - $ref: '#/components/schemas/PrintInstruction'
+      responses:
+        '200':
+          description: Результат выполнения инструкций print
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Output'
+        '400':
+          description: Неверный запрос (некорректные инструкции)
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    CalcInstruction:
+      type: object
+      required:
+        - type
+        - op
+        - var
+        - left
+        - right
+      properties:
+        type:
+          type: string
+          enum: [calc]
+          description: Тип инструкции - вычисление
+        op:
+          type: string
+          enum: [ "+", "-", "*" ]
+          description: Арифметическая операция
+        var:
+          type: string
+          description: Имя переменной для сохранения результата
+        left:
+          oneOf:
+            - type: integer
+              format: int64
+            - type: string
+          description: Левый операнд (число или имя переменной)
+        right:
+          oneOf:
+            - type: integer
+              format: int64
+            - type: string
+          description: Правый операнд (число или имя переменной)
+      example:
+        type: calc
+        op: "+"
+        var: "x"
+        left: 1
+        right: 2
+
+    PrintInstruction:
+      type: object
+      required:
+        - type
+        - var
+      properties:
+        type:
+          type: string
+          enum: [print]
+          description: Тип инструкции - вывод
+        var:
+          type: string
+          description: Имя переменной для вывода
+      example:
+        type: print
+        var: "x"
+
+    Output:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              var:
+                type: string
+                description: Имя переменной
+              value:
+                type: integer
+                format: int64
+                description: Значение переменной
+      example:
+        items:
+          - var: "x"
+            value: 12
+          - var: "w"
+            value: 0

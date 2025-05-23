@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  industrial-calculator:
+    build: .
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    restart: unless-stopped
